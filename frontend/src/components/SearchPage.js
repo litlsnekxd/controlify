@@ -14,9 +14,59 @@ const SearchPage = () => {
       .then((response) => response.json())
       .then((data) => {
         setResults(data.tracks.items || []);
+        console.log(data)
         setPage(0); // Reset to the first page on a new search
       });
   };
+
+  const addToQueue = (uri) => {
+    
+    console.log(uri)
+
+
+    var getCookie = function(name) {
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          var cookies = document.cookie.split(';');
+          for (var i = 0; i < cookies.length; i++) {
+              var cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    };
+
+    var csrfToken = getCookie('csrftoken');
+    
+    const requestOptions = {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        'X-CSRFToken': csrfToken,
+      },
+      body: JSON.stringify({ uri }),
+
+    };
+
+    fetch(`/spotify/queue/`, requestOptions)
+    .then(response =>{
+      if (response.ok) {
+        alert('Song added to queue!');
+      } else {
+        alert('Failed to queue song')
+      }
+
+    })
+    .catch(error => {
+      console.error('Error adding song to queue: ', error);
+      alert('An error occured');
+    })
+  }
+
+
 
   const handleNextPage = () => {
     if ((page + 1) * RESULTS_PER_PAGE < results.length) {
@@ -70,7 +120,7 @@ const SearchPage = () => {
                     </Box>
                   }
                 />
-                <Button variant="contained" color="secondary">
+                <Button variant="contained" color="secondary" onClick={()=> addToQueue(track.uri)}>
                   Add to Queue
                 </Button>
               </ListItem>

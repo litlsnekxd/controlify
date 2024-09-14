@@ -159,7 +159,28 @@ class SkipSong(APIView):
             
         
         return Response({}, status=status.HTTP_204_NO_CONTENT)
-    
+
+        
+class QueueSong(APIView):
+    def post(self, request, format=None):
+        room_code = self.request.session.get('room_code')
+        room = Room.objects.filter(code=room_code)[0]
+        
+        uri = request.data.get('uri')
+
+        if not uri:
+            return Response({'message':'no URI'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        endpoint = f"me/player/queue?uri={uri}"
+        print(endpoint)
+        response = execute_spotify_api_request(room.host, endpoint, post_=True)
+
+        if 'error' in response:
+            return Response({'message': 'Error queuing the song'}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': 'Song added to queue'}, status=status.HTTP_204_NO_CONTENT)
+
+
 class SearchSong(APIView):
     def get(self, request, format=None):
         
@@ -181,7 +202,3 @@ class SearchSong(APIView):
         
         #search_url = 'search?q=' + query + '&type=track'
         #execute_spotify_api_request(session_key, search_url, {}, post_=True)
-        
-class QueueSong(APIView):
-    def post(self, request, format=None):
-        pass
